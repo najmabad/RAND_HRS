@@ -1,0 +1,955 @@
+{smcl}
+{txt}{sf}{ul off}{.-}
+      name:  {res}<unnamed>
+       {txt}log:  {res}/SIERP/HRS_analysis/master_do.smcl
+  {txt}log type:  {res}smcl
+ {txt}opened on:  {res} 9 Apr 2018, 21:59:16
+{txt}
+{com}. 
+. 
+. global NB 1
+{txt}
+{com}. global ourName 0
+{txt}
+{com}. 
+. if $NB {c -(}
+. global folder "dofiles"
+. {c )-}
+{txt}
+{com}. 
+. if $ourName {c -(}
+. global folder "We will insert our path here"
+. {c )-}
+{txt}
+{com}. 
+. do $folder/data_cleaning.do
+{txt}
+{com}. * clean file for for "Goda-Honigsberg Predoc Position" 8 April 2018
+. * data provided by Health and Retirement Study at the University of Michigan
+. 
+. 
+. 
+. cls
+{txt}
+{com}. clear all
+{res}{txt}
+{com}. 
+. 
+. ********************************************************************************
+. *************************** Data setup *****************************************
+. ********************************************************************************
+. 
+. /* VARIABLE SELECTION */
+. 
+. use hhid rahhidpn hhidpn inw* raehsam raestrat r*wtresp ragender h*hhresp ///
+> raedegrm r*mstat raracem rarelig h*itot h*ahous h*amort h*ahmln h*aira ///
+> r*lbrf rassrecv r*govmd r*hiltc r*shlt r*smokev r*iearn h*icap r*ipena /// 
+> r*issdi r*isret r*iunwc r*igxfr h*iothr r*cendiv using rndhrs_p.dta, clear
+{txt}
+{com}. 
+. drop r*inlbrf
+{txt}
+{com}. 
+. /* GENERATE INCOME QUINTILE */
+. 
+. forvalues i=1/12{c -(} 
+{txt}  2{com}.         gen r`i'icap = h`i'icap/2 if h`i'hhresp ==2
+{txt}  3{com}.         replace r`i'icap =  h`i'icap if h`i'hhresp ==1
+{txt}  4{com}.  {c )-}
+{txt}(27,595 missing values generated)
+(2,752 real changes made)
+(24,407 missing values generated)
+(6,554 real changes made)
+(25,579 missing values generated)
+(6,075 real changes made)
+(23,517 missing values generated)
+(7,406 real changes made)
+(24,765 missing values generated)
+(6,849 real changes made)
+(25,863 missing values generated)
+(6,533 real changes made)
+(24,527 missing values generated)
+(7,161 real changes made)
+(25,767 missing values generated)
+(6,741 real changes made)
+(26,855 missing values generated)
+(6,577 real changes made)
+(23,987 missing values generated)
+(8,526 real changes made)
+(25,019 missing values generated)
+(8,078 real changes made)
+(26,483 missing values generated)
+(7,736 real changes made)
+
+{com}.  
+. forvalues i=1/12{c -(} 
+{txt}  2{com}.         gen r`i'iothr = h`i'iothr/2 if h`i'hhresp ==2
+{txt}  3{com}.         replace r`i'iothr =  h`i'iothr if h`i'hhresp ==1
+{txt}  4{com}.  {c )-}
+{txt}(27,595 missing values generated)
+(2,752 real changes made)
+(24,407 missing values generated)
+(6,554 real changes made)
+(25,579 missing values generated)
+(6,075 real changes made)
+(23,517 missing values generated)
+(7,406 real changes made)
+(24,765 missing values generated)
+(6,849 real changes made)
+(25,863 missing values generated)
+(6,533 real changes made)
+(24,527 missing values generated)
+(7,161 real changes made)
+(25,767 missing values generated)
+(6,741 real changes made)
+(26,855 missing values generated)
+(6,577 real changes made)
+(23,987 missing values generated)
+(8,526 real changes made)
+(25,019 missing values generated)
+(8,078 real changes made)
+(26,483 missing values generated)
+(7,736 real changes made)
+
+{com}. 
+. forvalues i=1/12{c -(} 
+{txt}  2{com}.         egen r`i'itot = rowtotal(r`i'i*), missing
+{txt}  3{com}.         label var r`i'itot  "individual income"
+{txt}  4{com}.  {c )-}
+{txt}(24843 missing values generated)
+(17853 missing values generated)
+(19504 missing values generated)
+(16111 missing values generated)
+(17916 missing values generated)
+(19330 missing values generated)
+(17366 missing values generated)
+(19026 missing values generated)
+(20278 missing values generated)
+(15461 missing values generated)
+(16941 missing values generated)
+(18747 missing values generated)
+
+{com}.  
+. drop r*iearn r*ipena r*issdi r*isret r*iunwc r*igxfr r*icap r*iothr ///
+> h*icap h*iothr 
+{txt}
+{com}. 
+. forvalues i=1/12{c -(}
+{txt}  2{com}.         pctile p5_`i' = r`i'itot, nq(5)
+{txt}  3{com}.         return list
+{txt}  4{com}.         gen r`i'iqnt=.
+{txt}  5{com}.         replace r`i'iqnt=1 if r`i'itot<=r(r1) 
+{txt}  6{com}.         replace r`i'iqnt=2 if r`i'itot<=r(r2) & r`i'itot>r(r1)
+{txt}  7{com}.         replace r`i'iqnt=3 if r`i'itot<=r(r3) & r`i'itot>r(r2) 
+{txt}  8{com}.         replace r`i'iqnt=4 if r`i'itot<=r(r4) & r`i'itot>r(r3) 
+{txt}  9{com}.         replace r`i'iqnt=5 if r`i'itot>r(r4)  & r`i'itot<.
+{txt} 10{com}.         label var r`i'iqnt "income quintile"
+{txt} 11{com}.  {c )-}
+
+{txt}scalars:
+                 r(r1) =  {res}5200
+                 {txt}r(r2) =  {res}13750
+                 {txt}r(r3) =  {res}24000
+                 {txt}r(r4) =  {res}39800
+{txt}(37,495 missing values generated)
+(2,540 real changes made)
+(2,523 real changes made)
+(2,561 real changes made)
+(2,499 real changes made)
+(2,529 real changes made)
+
+scalars:
+                 r(r1) =  {res}5655
+                 {txt}r(r2) =  {res}10580
+                 {txt}r(r3) =  {res}18265
+                 {txt}r(r4) =  {res}33600
+{txt}(37,495 missing values generated)
+(3,929 real changes made)
+(3,930 real changes made)
+(3,927 real changes made)
+(3,932 real changes made)
+(3,924 real changes made)
+
+scalars:
+                 r(r1) =  {res}6400
+                 {txt}r(r2) =  {res}12132
+                 {txt}r(r3) =  {res}20591
+                 {txt}r(r4) =  {res}37000
+{txt}(37,495 missing values generated)
+(3,601 real changes made)
+(3,597 real changes made)
+(3,597 real changes made)
+(3,605 real changes made)
+(3,591 real changes made)
+
+scalars:
+                 r(r1) =  {res}6912
+                 {txt}r(r2) =  {res}13000
+                 {txt}r(r3) =  {res}22268
+                 {txt}r(r4) =  {res}40003.5
+{txt}(37,495 missing values generated)
+(4,279 real changes made)
+(4,300 real changes made)
+(4,252 real changes made)
+(4,277 real changes made)
+(4,276 real changes made)
+
+scalars:
+                 r(r1) =  {res}7356
+                 {txt}r(r2) =  {res}13860
+                 {txt}r(r3) =  {res}23460
+                 {txt}r(r4) =  {res}42000
+{txt}(37,495 missing values generated)
+(3,916 real changes made)
+(3,917 real changes made)
+(3,915 real changes made)
+(3,924 real changes made)
+(3,907 real changes made)
+
+scalars:
+                 r(r1) =  {res}7925.09814453125
+                 {txt}r(r2) =  {res}14244
+                 {txt}r(r3) =  {res}23866
+                 {txt}r(r4) =  {res}42118
+{txt}(37,495 missing values generated)
+(3,633 real changes made)
+(3,637 real changes made)
+(3,629 real changes made)
+(3,633 real changes made)
+(3,633 real changes made)
+
+scalars:
+                 r(r1) =  {res}8400
+                 {txt}r(r2) =  {res}15376
+                 {txt}r(r3) =  {res}26000
+                 {txt}r(r4) =  {res}47728
+{txt}(37,495 missing values generated)
+(4,097 real changes made)
+(3,955 real changes made)
+(4,029 real changes made)
+(4,023 real changes made)
+(4,025 real changes made)
+
+scalars:
+                 r(r1) =  {res}9006.5
+                 {txt}r(r2) =  {res}16176
+                 {txt}r(r3) =  {res}27000
+                 {txt}r(r4) =  {res}48960
+{txt}(37,495 missing values generated)
+(3,694 real changes made)
+(3,694 real changes made)
+(3,704 real changes made)
+(3,684 real changes made)
+(3,693 real changes made)
+
+scalars:
+                 r(r1) =  {res}9658
+                 {txt}r(r2) =  {res}17000
+                 {txt}r(r3) =  {res}28800
+                 {txt}r(r4) =  {res}51160
+{txt}(37,495 missing values generated)
+(3,444 real changes made)
+(3,453 real changes made)
+(3,435 real changes made)
+(3,442 real changes made)
+(3,443 real changes made)
+
+scalars:
+                 r(r1) =  {res}9400
+                 {txt}r(r2) =  {res}16988
+                 {txt}r(r3) =  {res}29010
+                 {txt}r(r4) =  {res}52800
+{txt}(37,495 missing values generated)
+(4,408 real changes made)
+(4,406 real changes made)
+(4,407 real changes made)
+(4,410 real changes made)
+(4,403 real changes made)
+
+scalars:
+                 r(r1) =  {res}9600
+                 {txt}r(r2) =  {res}17088
+                 {txt}r(r3) =  {res}29481
+                 {txt}r(r4) =  {res}54400
+{txt}(37,495 missing values generated)
+(4,157 real changes made)
+(4,067 real changes made)
+(4,109 real changes made)
+(4,113 real changes made)
+(4,108 real changes made)
+
+scalars:
+                 r(r1) =  {res}10000
+                 {txt}r(r2) =  {res}18000
+                 {txt}r(r3) =  {res}30643.83984375
+                 {txt}r(r4) =  {res}56196
+{txt}(37,495 missing values generated)
+(3,750 real changes made)
+(3,780 real changes made)
+(3,719 real changes made)
+(3,750 real changes made)
+(3,749 real changes made)
+
+{com}. 
+. drop p5_*
+{txt}
+{com}. 
+. /* NOTES: the individual income quintile in a given wave of interview is
+> computed considering the income distribution of that specific wave.
+> Even thought for this analysis inflation was not taken directly into account, 
+> this solution seems a better option because: (1) level of income could have
+> varied considerably during the period of analsysis, (2) many research have 
+> underline the importance of "relative" rather than "absolute" inequality, which
+> whose effect could be underestimated when "collapsing" the entire dataset. */
+. 
+. 
+. 
+. /* FROM WIDE TO LONG FORMAT */
+. 
+. reshape long r@mstat inw@  h@hhresp r@wthh r@wtresp r@shlt r@smokev ///
+> h@aira h@ahous h@amort h@ahmln h@itot r@govmd r@hiltc r@lbrf r@itot ///
+> r@iqnt r@cendiv, i(rahhidpn) j(wave)
+{txt}(note: j = 1 2 3 4 5 6 7 8 9 10 11 12)
+(note: r1wthh not found)
+(note: r2wthh not found)
+(note: r3wthh not found)
+(note: r4wthh not found)
+(note: r5wthh not found)
+(note: r6wthh not found)
+(note: r7wthh not found)
+(note: r8wthh not found)
+(note: r9wthh not found)
+(note: r10wthh not found)
+(note: r11wthh not found)
+(note: r12wthh not found)
+
+Data{col 36}wide{col 43}->{col 48}long
+{hline 77}
+Number of obs.                 {res}   37495   {txt}->{res}  449940
+{txt}Number of variables            {res}     214   {txt}->{res}      29
+{txt}j variable (12 values)                    ->   {res}wave
+{txt}xij variables:
+           {res}r1mstat r2mstat ... r12mstat   {txt}->   {res}rmstat
+                    inw1 inw2 ... inw12   {txt}->   {res}inw
+        h1hhresp h2hhresp ... h12hhresp   {txt}->   {res}hhhresp
+              r1wthh r2wthh ... r12wthh   {txt}->   {res}rwthh
+        r1wtresp r2wtresp ... r12wtresp   {txt}->   {res}rwtresp
+              r1shlt r2shlt ... r12shlt   {txt}->   {res}rshlt
+        r1smokev r2smokev ... r12smokev   {txt}->   {res}rsmokev
+              h1aira h2aira ... h12aira   {txt}->   {res}haira
+           h1ahous h2ahous ... h12ahous   {txt}->   {res}hahous
+           h1amort h2amort ... h12amort   {txt}->   {res}hamort
+           h1ahmln h2ahmln ... h12ahmln   {txt}->   {res}hahmln
+              h1itot h2itot ... h12itot   {txt}->   {res}hitot
+           r1govmd r2govmd ... r12govmd   {txt}->   {res}rgovmd
+           r1hiltc r2hiltc ... r12hiltc   {txt}->   {res}rhiltc
+              r1lbrf r2lbrf ... r12lbrf   {txt}->   {res}rlbrf
+              r1itot r2itot ... r12itot   {txt}->   {res}ritot
+              r1iqnt r2iqnt ... r12iqnt   {txt}->   {res}riqnt
+        r1cendiv r2cendiv ... r12cendiv   {txt}->   {res}rcendiv
+{txt}{hline 77}
+
+{com}. 
+. 
+. drop if hhhresp==.
+{txt}(223,376 observations deleted)
+
+{com}. 
+. 
+. /* EXCLUDE MISSING VALUES */
+. 
+. keep if ragender <. & raedegrm <. & rmstat <. & rmstat <. ///
+> & raracem <. & rarelig <. & ritot <. & hahous <. & hamort <. ///
+> & hahmln <. & haira <. &rlbrf <. & rassrecv <. & rgovmd <. & ///
+> rhiltc <. & rshlt  <. & rsmokev <.
+{txt}(11,856 observations deleted)
+
+{com}. 
+. /* NOTES: all missing values are dropped. This is a standard approach in 
+> many micro-econometrics analysis and the sample contains many observations */
+. 
+. 
+. 
+. /* RECODING OF VARIABLES */
+. 
+. /* Demographics */
+. replace ragender = ragender <2
+{txt}(124,660 real changes made)
+
+{com}. replace raedegrm = . if raedegrm == 8
+{txt}(8 real changes made, 8 to missing)
+
+{com}. keep if raedegrm <.
+{txt}(8 observations deleted)
+
+{com}. gen raehsdegr = raedegrm <= 0
+{txt}
+{com}. gen raemcdegr = raedegrm > 5 
+{txt}
+{com}. drop raedegrm
+{txt}
+{com}. gen rwmarried = rmstat < 3 
+{txt}
+{com}. drop rmstat
+{txt}
+{com}. gen rablack = raracem < 3 & raracem > 1
+{txt}
+{com}. drop raracem
+{txt}
+{com}. gen racath = rarelig < 3 & rarelig > 1
+{txt}
+{com}. drop rarelig
+{txt}
+{com}. 
+. label var ragender "Male"
+{txt}
+{com}. label var hhhresp "N. people in household"
+{txt}
+{com}. label var raehsdegr "Less than High School"
+{txt}
+{com}. label var raemcdegr "More than College"
+{txt}
+{com}. label var rwmarried "Married"
+{txt}
+{com}. label var rablack "Black"
+{txt}
+{com}. label var racath "Catholic"
+{txt}
+{com}. 
+. /* NOTES: the values "other" of the variable raedegrm (education) is coded as
+> missing value (and subsequently excluded) since there is ambiguity on its 
+> definition and it could contain level of edu < college (see codebook p.144) */
+. 
+. 
+. /* Financials */
+. gen hampr = hamort + hahmln
+{txt}
+{com}. replace hampr = hampr > 0 
+{txt}(75,258 real changes made)
+
+{com}. drop hamort hahmln
+{txt}
+{com}. gen rwlbrf = rlbrf < 2
+{txt}
+{com}. drop rlbrf
+{txt}
+{com}. 
+. label var hitot  "Total Household Income"
+{txt}
+{com}. label var hahous  "Value of Primary Residence"
+{txt}
+{com}. label var hampr  "Mortgage Primary Residence"
+{txt}
+{com}. label var haira  "Value in IRA Accounts"
+{txt}
+{com}. label var rwlbrf  "Work Full Time"
+{txt}
+{com}. 
+. /* NOTES: the values of the variable "all mortgages/land contracts
+> (primary residence)" and "other home loans (primary residence)" are summed to
+> construct a unique indicator */
+. 
+. 
+. /* Insurance */
+. label var rassrecv "Receives Social Security"
+{txt}
+{com}. label var rgovmd "Receives Medicaid"
+{txt}
+{com}. label var rhiltc "Has long-term care insurance"
+{txt}
+{com}. 
+. 
+. /* Health */
+. gen rwshlt = rshlt < 3
+{txt}
+{com}. drop rshlt
+{txt}
+{com}. 
+. label var rwshlt  "Good Health"
+{txt}
+{com}. label var rsmokev "Ever Smoked"
+{txt}
+{com}. 
+. 
+. 
+. /* N. OF OBSERVATION BY WAVE */
+. 
+. 
+. table wave inw
+
+{txt}{hline 10}{c TT}{hline 13}
+          {c |}     inw     
+     wave {c |} 1.resp,alive
+{hline 10}{c +}{hline 13}
+        1 {c |}       {res}12,104
+        {txt}2 {c |}       {res}16,031
+        {txt}3 {c |}       {res}17,138
+        {txt}4 {c |}       {res}20,368
+        {txt}5 {c |}       {res}18,857
+        {txt}6 {c |}       {res}17,574
+        {txt}7 {c |}       {res}19,501
+        {txt}8 {c |}       {res}17,867
+        {txt}9 {c |}       {res}16,603
+       {txt}10 {c |}       {res}20,887
+       {txt}11 {c |}       {res}19,792
+       {txt}12 {c |}       {res}17,978
+{txt}{hline 10}{c BT}{hline 13}
+
+{com}. 
+. 
+. 
+. 
+{txt}end of do-file
+
+{com}. do $folder/summary_statistics.do
+{txt}
+{com}. * summary statistic file for for "Goda-Honigsberg Predoc Position" 8 April 2018
+. 
+. 
+. 
+. ssc install estout, replace
+{txt}checking {hilite:estout} consistency and verifying not already installed...
+all files already exist and are up to date.
+
+{com}. 
+. global dem "ragender hhhresp raehsdegr raemcdegr rwmarried rablack racath"
+{txt}
+{com}. global fin "hitot hahous haira hampr rwlbrf"
+{txt}
+{com}. global insu "rassrecv rgovmd rhiltc"
+{txt}
+{com}. global hea "rwshlt rsmokev"
+{txt}
+{com}. 
+. 
+. 
+. 
+. /* TABLE OF SUMMARY STATISTICS */
+. eststo clear
+{txt}
+{com}. 
+. qui estpost su $dem $fin $insu $hea
+{txt}
+{com}. est store A
+{txt}
+{com}. 
+. forvalues i=1/5{c -(}
+{txt}  2{com}.         preserve
+{txt}  3{com}.         keep if riqnt==`i'
+{txt}  4{com}.         qui estpost su $dem $fin $insu $hea
+{txt}  5{com}.         
+.         est store M_`i'
+{txt}  6{com}.         restore
+{txt}  7{com}. {c )-}
+{txt}(172,408 observations deleted)
+(172,494 observations deleted)
+(171,722 observations deleted)
+(171,210 observations deleted)
+(170,966 observations deleted)
+
+{com}. 
+. esttab A M_* using SummaryStatistics.tex, replace ///
+> refcat(ragender "\emph{c -(}Demographics{c )-}" hitot "\emph{c -(}Financials{c )-}" ///
+> rassrecv "\emph{c -(}Insurance{c )-}"  rwshlt "\emph{c -(}Health{c )-}", nolabel) ///
+> title("Table 1: Sample characteristics, HRS Rand, 1992 - 2014") /// 
+> mtitle("Full Sample" "Q1" "Q2" "Q3" "Q4" "Q5") ///
+> cells(mean (fmt(2)) sd(par fmt(2))) label booktabs nonum collabels(none) ///
+> gaps noobs ///
+> addnotes("Notes: summary of mean value, standard deviation in parenthesis below estimates.") ///
+> stats(N, fmt(0)  labels("Observations") )
+{res}{txt}(output written to {browse  `"SummaryStatistics.tex"'})
+
+{com}. 
+. 
+. /* GRAPH GOOD HEALTH - MEDICAID */
+. 
+. preserve
+{txt}
+{com}. keep if riqnt == 1 | riqnt == 5
+{txt}(128,674 observations deleted)
+
+{com}. graph bar (sum) rwshlt rgovmd [pweight=rwtresp], over(riqnt) percentage ///
+> legend(label(1 "In good health") label(2 "Receives Medicaid")) ///
+> blabel(bar , format(%9.2fc)) ///
+> ytitle(Share of respondents) ///
+> title("Share of respondents in good health and" "share of Medicaid beneficiaries by income quintile") 
+{res}{txt}
+{com}. graph export graph1.png, replace
+{txt}(file graph1.png written in PNG format)
+
+{com}. restore
+{txt}
+{com}. 
+. /* NOTES: By plotting the share of respondents by income quintile, one can 
+> notice that many more individuals in the lower income quintile receives 
+> Medicaid than in the highest one.
+> This is not surprising since Medicaid is a joint federal and state program 
+> that provides health coverage for people in the US with limited income and
+> resources. Conversely, the share of respondents in the highest quintile
+> also reports being in a good health status much more frequently than individuals
+> in the bottom of the income distribution. The data seems to suggests a
+> relationship between income and health which is worth investigation. */
+. 
+. 
+. /* WEIGHTS */
+. 
+. /* NOTES: HRS RAND dataset provides two types of weights: r*wtresp 
+> (weight at individual level) and r*wthh (weight at household level).
+> RAND documentation suggests using "household weight" in analyses of measures
+> collected at the household level, such as "income,assets, debts and housing".
+> Conversely, "Respondent weight" are recommended for measures collected at the
+> respondent level such as health, labor supply and health care utilization.
+> 
+> In this analysis, we consider both type of measures but, since the level of 
+> measurement of of interest is the individual, "respondend weights" are selected.
+> 
+> HRS RAND weights classify as "pweight" and hence they are not supported by the 
+> "estpost summarize" command used to compute summary statistics. Notice that,
+> however, one could look at estimate of population mean (instead of summary
+> statistics) which instead must be computed using weights.
+> 
+> See "http://hrsonline.isr.umich.edu/sitedocs/wghtdoc.pdf" for further details.*/
+. 
+. 
+. 
+. 
+{txt}end of do-file
+
+{com}. do $folder/main_analysis.do
+{txt}
+{com}. * main analysis file for for "Goda-Honigsberg Predoc Position" 8 April 2018
+. 
+. 
+. 
+. /* PANEL DATA */
+. 
+. xtset hhidpn wave
+{res}{txt}{col 8}panel variable:  {res}hhidpn (unbalanced)
+{txt}{col 9}time variable:  {res}{col 25}wave, 1 to 12, but with gaps
+{txt}{col 17}delta:  {res}1 unit
+{txt}
+{com}. 
+. xtsum rgovmd
+
+{txt}Variable         {c |}      Mean   Std. Dev.       Min        Max {c |}    Observations
+{hline 17}{c +}{hline 44}{c +}{hline 16}
+rgovmd{col 10}overall {c |} {res} .0846763      .2784          0          1{txt} {c |}{col 69}N =  214700
+{col 10}between {c |}{col 31}{res} .2493772          0          1{txt} {c |}{col 69}n =   35876
+{col 10}within  {c |}{col 31}{res} .1708149  -.8319904   1.001343{txt} {c |} T-bar =  5.9845
+
+{com}. xttab rgovmd
+
+                  {txt}Overall             Between            Within
+   rgovmd {c |}    Freq.  Percent      Freq.  Percent        Percent
+{hline 10}{c +}{hline 53}
+     0.no {c |}{res}  196520     91.53     34296     95.60          94.23
+    {txt}1.yes {c |}{res}   18180      8.47      6943     19.35          51.24
+{txt}{hline 10}{c +}{hline 53}
+    Total {c |}{res}  214700    100.00     41239    114.95          87.00
+                             {txt}(n = {res}35876{txt})
+
+{com}. 
+. /* NOTES: The within variation for the "Receives Medicaid" is 0.17.
+> Moreover, 51% of the people who ever received Medicaid always received Medicaid
+> during the period of observation, while 94% of the people who did not received
+> Medicaid never received it. */
+. 
+. 
+. /* NOTES: Robust standard errors that cluster on the individual are use in this
+> analysis. Please notice that HRS RAND documentation suggests also using the
+> svyset command to declare the survey structure of the data as follows:
+> svyset raehsamp [pweight=rwtresp], strata (raestrat).
+> See "http://hrsonline.isr.umich.edu/sitedocs/dmgt/IntroUserGuide.pdf"
+> for further reference.*/
+. 
+. 
+. /* STANDARDIZED COEFFICIENTS */
+. 
+. foreach var of varlist hitot hahous haira {c -(}
+{txt}  2{com}. egen `var'_std =std(`var')
+{txt}  3{com}. {c )-}
+{txt}
+{com}. 
+. lab var hitot_std "Total Household Income"
+{txt}
+{com}. lab var hahous_std "Value of Primary Residence"
+{txt}
+{com}. lab var haira_std "Value in IRA Accounts"
+{txt}
+{com}. 
+. global fin_std "hitot_std hahous_std haira_std hampr rwlbrf"
+{txt}
+{com}. 
+. 
+. /* NOTES: dummy variables are not standardized since: 
+> (1) a dummy variable cannot be increased by a standard deviation so the
+> regular interpretation for standardized coefficients does not apply.
+> In this case regression coefficients of dummy variables should be interpreted
+> as the 100*β percentage point change in the probability that the individual is 
+> in good health.*/
+. 
+. 
+. 
+. /* PANEL REGRESSIONS */
+. eststo clear
+{txt}
+{com}. 
+. 
+. quietly reg rwshlt $dem $fin_std $insu rsmokev [pweight=rwtresp], ///
+> vce(cluster hhidpn)
+{txt}
+{com}. 
+. est store A
+{txt}
+{com}. 
+. xi: quietly reg rwshlt $dem $fin_std $insu rsmokev i.wave [pweight=rwtresp], ///
+> vce(cluster hhidpn)
+{txt}i.wave{col 19}_Iwave_1-12{col 39}(naturally coded; _Iwave_1 omitted)
+
+{com}. 
+. est store B
+{txt}
+{com}. 
+. xi: quietly reg rwshlt $dem $fin_std $insu rsmokev i.rcendiv ///
+> [pweight=rwtresp], vce(cluster hhidpn)
+{txt}i.rcendiv{col 19}_Ircendiv_1-11{col 39}(naturally coded; _Ircendiv_1 omitted)
+
+{com}. 
+. est store C
+{txt}
+{com}. 
+. xi: quietly reg rwshlt $dem $fin_std $insu rsmokev i.wave i.rcendiv ///
+> [pweight=rwtresp],vce(cluster hhidpn)
+{txt}i.wave{col 19}_Iwave_1-12{col 39}(naturally coded; _Iwave_1 omitted)
+i.rcendiv{col 19}_Ircendiv_1-11{col 39}(naturally coded; _Ircendiv_1 omitted)
+
+{com}. est store D
+{txt}
+{com}. 
+. 
+. esttab A B C D using PanelRegressions.tex, replace ///
+> title("Table 2: Good Health indicator and Medicaid model, HRS Rand, 1992 - 2014 ") ///
+> mtitle("Pooled OLS" "Fixed Effect" "Fixed Effect" "Fixed Effect" ) ///
+> drop(_Iwave_* _Ircendiv_* ) ///
+> refcat(ragender "\emph{c -(}Demographics{c )-}" hitot_std "\emph{c -(}Financials{c )-}" ///
+> rassrecv "\emph{c -(}Insurance{c )-}"  rsmokev "\emph{c -(}Health{c )-}", nolabel) ///
+> star(* 0.10 ** 0.05 *** 0.01) ///
+> label collabels(none) booktabs ///
+> stats(N r2_a, fmt(2)  labels(`"Observations"' `"Adjusted \(R^{c -(}2{c )-}\)"') ) ///
+> addnotes("Notes: Pooled OLS and Fixed Effect Estimations Model ")
+{res}{txt}(output written to {browse  `"PanelRegressions.tex"'})
+
+{com}. 
+. 
+. 
+. 
+. 
+.  
+. 
+. 
+{txt}end of do-file
+
+{com}. do $folder/random_groups
+{txt}
+{com}. * summary statistic file for for "Goda-Honigsberg Predoc Position" 8 April 2018
+. 
+. 
+. /* RANDOM GROUPS BY CENSUS DIVISION */
+. 
+. ssc install randtreat, replace
+{txt}checking {hilite:randtreat} consistency and verifying not already installed...
+all files already exist and are up to date.
+
+{com}. eststo clear
+{txt}
+{com}. 
+. 
+. 
+. keep if wave==12
+{txt}(196,722 observations deleted)
+
+{com}. keep if rcendiv != 11
+{txt}(46 observations deleted)
+
+{com}. 
+. 
+. 
+. forvalues i=1/9{c -(}
+{txt}  2{com}.         randtreat if rcendiv==`i', generate(treatment_`i') ///
+>         replace strata(hitot rwshlt) setseed(1110101)  misfits(strata)
+{txt}  3{com}.         
+.         qui estpost summarize $dem $fin $insu $hea if treatment_`i' == 1
+{txt}  4{com}.         
+.         est store M_T`i'
+{txt}  5{com}.         
+.         matrix define CT_`i' = e(mean)
+{txt}  6{com}.         scalar hitot_m_t_`i' = CT_`i'[1,8]
+{txt}  7{com}.         
+.         
+.         qui estpost summarize $dem $fin $insu $hea if treatment_`i' == 0   
+{txt}  8{com}.         
+.         est store M_C`i'
+{txt}  9{com}.         
+.         matrix define CC_`i' = e(mean)
+{txt} 10{com}.         scalar hitot_m_c_`i' = CC_`i'[1,8]
+{txt} 11{com}. {c )-}
+{txt}(17351 missing values generated)
+{res}{txt}assignment produces 357 misfits
+{res}{txt}(17,351 missing values generated)
+(15906 missing values generated)
+{res}{txt}assignment produces 1136 misfits
+{res}{txt}(15,906 missing values generated)
+(15273 missing values generated)
+{res}{txt}assignment produces 1495 misfits
+{res}{txt}(15,273 missing values generated)
+(16739 missing values generated)
+{res}{txt}assignment produces 717 misfits
+{res}{txt}(16,739 missing values generated)
+(13797 missing values generated)
+{res}{txt}assignment produces 2249 misfits
+{res}{txt}(13,797 missing values generated)
+(16797 missing values generated)
+{res}{txt}assignment produces 651 misfits
+{res}{txt}(16,797 missing values generated)
+(15853 missing values generated)
+{res}{txt}assignment produces 1033 misfits
+{res}{txt}(15,853 missing values generated)
+(16825 missing values generated)
+{res}{txt}assignment produces 653 misfits
+{res}{txt}(16,825 missing values generated)
+(15411 missing values generated)
+{res}{txt}assignment produces 1333 misfits
+{res}{txt}(15,411 missing values generated)
+
+{com}. 
+. 
+. 
+. 
+. esttab M_T* M_C*  using BalanceGroups.tex, replace ///
+> cells(mean (fmt(2)) sd(par fmt(2))) label booktabs nonum ///
+> title("Table 3: Sample characteristics, HRS Rand, 2014 ") /// 
+> mtitle("Group 1" "Group 2" "Group 1" "Group 2" "Group 1" "Group 2" "Group 1" ///
+> "Group 2" "Group 1" "Group 2" "Group 1" "Group 2" "Group 1" "Group 2" ///
+> "Group 1" "Group 2" "Group 1" "Group 2") ///
+> mgroups("New England " "Mid Atlantic" "En Central" "Wn Central" ///
+> "S Atlantic"  "Es Central" "Ws Central" "Mountain" "Pacific", ///
+> pattern(1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0) ) ///
+> refcat(ragender "\emph{c -(}Demographics{c )-}" hitot "\emph{c -(}Financials{c )-}" ///
+> rassrecv "\emph{c -(}Insurance{c )-}"  rwshlt "\emph{c -(}Health{c )-}", nolabel) ///
+> collabels(none) gaps noobs ///
+> addnotes("Notes: summary of mean value, standard deviation in parenthesis below estimates.") 
+{res}{txt}(output written to {browse  `"BalanceGroups.tex"'})
+
+{com}. 
+. 
+. /* JOINT TEST OF ORTHOGONALITY */
+. 
+. local index = 0
+{txt}
+{com}. 
+. forvalues i=1/9{c -(}
+{txt}  2{com}.         preserve
+{txt}  3{com}.         keep if rcendiv==`i'
+{txt}  4{com}.         qui reg treatment_`i' $dem $fin $insu $hea 
+{txt}  5{com}.         
+.         if `index' != 0{c -(}
+{txt}  6{com}.                 scalar f = e(F)
+{txt}  7{com}.                 scalar df1 =  e(df_m)
+{txt}  8{com}.                 scalar df2 =  e(df_r)
+{txt}  9{com}.                 scalar p_F = Ftail(df1,df2,f)
+{txt} 10{com}.                 matrix F = (F \ f \ p_F)
+{txt} 11{com}. {c )-}
+{txt} 12{com}.         else{c -(}
+{txt} 13{com}.                 scalar f = e(F)
+{txt} 14{com}.                 scalar df1 =  e(df_m)
+{txt} 15{com}.                 scalar df2 =  e(df_r)
+{txt} 16{com}.                 scalar p_F = Ftail(df1,df2,f)
+{txt} 17{com}.                 matrix F = (f \ p_F)
+{txt} 18{com}.                 local index = `index' + 1
+{txt} 19{com}. {c )-}
+{txt} 20{com}. restore
+{txt} 21{com}. {c )-}       
+{txt}(17,351 observations deleted)
+(15,906 observations deleted)
+(15,273 observations deleted)
+(16,739 observations deleted)
+(13,797 observations deleted)
+(16,797 observations deleted)
+(15,853 observations deleted)
+(16,825 observations deleted)
+(15,411 observations deleted)
+
+{com}. 
+. 
+. matrix list F
+{res}
+{txt}F[18,1]
+            c1
+ r1 {res} 1.1430554
+{txt} r2 {res} .30841934
+{txt} r3 {res} .63056791
+{txt} r4 {res} .87019998
+{txt} r5 {res} .89318213
+{txt} r6 {res}  .5822616
+{txt} r7 {res} .94673308
+{txt} r8 {res}   .517675
+{txt} r9 {res} .72014861
+{txt}r10 {res} .78497909
+{txt}r11 {res} .70191803
+{txt}r12 {res} .80322562
+{txt}r13 {res} .39770346
+{txt}r14 {res} .98628601
+{txt}r15 {res} .90864832
+{txt}r16 {res} .56354444
+{txt}r17 {res} .40299053
+{txt}r18 {res} .98526692
+{reset}
+{com}. 
+. quietly frmttable using JoinTest, statmat(F) ///
+> noblankrows title("Joint test of orthogonality when testing for balance") /// 
+> tex replace rtitles( ///
+> "New England ", "F stat" \ "", "Prob $>$ F "\ ///
+> "Mid Atlantic", "F stat" \ "", "Prob $>$ F"\ ///
+> "En Central ", "F stat" \ "", "Prob $>$ F"\ ///
+> "Wn Central ", "F stat" \ "", "Prob $>$ F"\ ///
+> "S Atlantic ", "F stat" \ "", "Prob $>$ F"\ ///
+> "Es Central ", "F stat" \ "", "Prob $>$ F"\ ///
+> "Ws Central ", "F stat" \ "", "Prob $>$ F"\ ///
+> "Mountain ", "F stat" \ "", "Prob $>$ F"\ ///
+> "Pacific ", "F stat" \ "", "Prob $>$ F")
+{txt}
+{com}. 
+. 
+. 
+. /* MEAN DIFFERENCES */
+. 
+. gen hitot_md =. 
+{txt}(17,932 missing values generated)
+
+{com}. 
+. forvalues i=1/9{c -(}
+{txt}  2{com}.         replace hitot_md =  hitot_m_t_`i' - hitot_m_c_`i' if rcendiv==`i'
+{txt}  3{com}. {c )-}
+{txt}(581 real changes made)
+(2,026 real changes made)
+(2,659 real changes made)
+(1,193 real changes made)
+(4,135 real changes made)
+(1,135 real changes made)
+(2,079 real changes made)
+(1,107 real changes made)
+(2,521 real changes made)
+
+{com}. 
+. graph twoway (scatter hitot_md rcendiv), ///
+> yscale(range(0 69877)) title("Mean difference_Total Household Income") ///
+> ytitle("Total Household Income") xtitle("Census Division")
+{res}{txt}
+{com}. 
+{txt}end of do-file
+
+{com}. 
+. 
+{txt}end of do-file
+
+{com}. 
