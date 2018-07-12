@@ -1,4 +1,4 @@
-* clean file for for "Goda-Honigsberg Predoc Position" 8 April 2018
+* clean file - 8 April 2018
 * data provided by Health and Retirement Study at the University of Michigan
 
 
