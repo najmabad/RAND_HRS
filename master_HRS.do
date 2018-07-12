@@ -13,7 +13,7 @@ do $folder/data_cleaning.do
 
 
 
-* master file for Goda-Honigsberg Predoc Position 7April2018 * 
+* master file 8 April2018 * 
 
 *do clean*
 
