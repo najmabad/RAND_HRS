@@ -1,4 +1,4 @@
-* summary statistic file for for "Goda-Honigsberg Predoc Position" 8 April 2018
+* summary statistic - 8 April 2018 * 
 
 
 /* RANDOM GROUPS BY CENSUS DIVISION */
